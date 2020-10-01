@@ -184,8 +184,8 @@ func (opt *Options) init() {
 	case 0:
 		opt.MaxRetryBackoff = 512 * time.Millisecond
 	}
-	if opt.ShouldRetryFunc == nil {
-		opt.ShouldRetryFunc = shouldRetry
+	if opt.ShouldRetry == nil {
+		opt.ShouldRetry = shouldRetry
 	}
 }
 
