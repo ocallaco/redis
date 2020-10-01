@@ -11,6 +11,7 @@ import (
 )
 
 var ErrClosed = pool.ErrClosed
+var ErrPoolTimeout = pool.ErrPoolTimeout
 
 type Error interface {
 	error
@@ -24,7 +25,7 @@ type Error interface {
 
 var _ Error = proto.RedisError("")
 
-func shouldRetry(err error, retryTimeout bool) bool {
+func shouldRetry(err error, retryTimeout, retryTemporary bool) bool {
 	switch err {
 	case io.EOF, io.ErrUnexpectedEOF:
 		return true
@@ -37,6 +38,13 @@ func shouldRetry(err error, retryTimeout bool) bool {
 			return retryTimeout
 		}
 		return true
+	}
+
+	if v, ok := err.(temporaryError); ok {
+		if v.Temporary() {
+			return retryTemporary
+		}
+		return false
 	}
 
 	s := err.Error()
