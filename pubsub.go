@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-redis/redis/v8/internal"
-	"github.com/go-redis/redis/v8/internal/pool"
-	"github.com/go-redis/redis/v8/internal/proto"
+	"github.com/ocallaco/redis/v8/internal"
+	"github.com/ocallaco/redis/v8/internal/pool"
+	"github.com/ocallaco/redis/v8/internal/proto"
 )
 
 const (
@@ -423,7 +423,7 @@ func (c *PubSub) ReceiveMessage(ctx context.Context) (*Message, error) {
 // is blocked full for 30 seconds the message is dropped.
 // Receive* APIs can not be used after channel is created.
 //
-// go-redis periodically sends ping messages to test connection health
+// ocallaco periodically sends ping messages to test connection health
 // and re-subscribes if ping can not not received for 30 seconds.
 func (c *PubSub) Channel() <-chan *Message {
 	return c.ChannelSize(100)

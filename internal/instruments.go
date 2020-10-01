@@ -17,11 +17,11 @@ var (
 func init() {
 	defer func() {
 		if r := recover(); r != nil {
-			Logger.Printf(context.Background(), "Error creating meter github.com/go-redis/redis for Instruments", r)
+			Logger.Printf(context.Background(), "Error creating meter github.com/ocallaco/redis for Instruments", r)
 		}
 	}()
 
-	meter := metric.Must(global.Meter("github.com/go-redis/redis"))
+	meter := metric.Must(global.Meter("github.com/ocallaco/redis"))
 
 	WritesCounter = meter.NewInt64Counter("redis.writes",
 		metric.WithDescription("the number of writes initiated"),
