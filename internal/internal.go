@@ -13,6 +13,7 @@ func RetryBackoff(retry int, minBackoff, maxBackoff time.Duration) time.Duration
 	if minBackoff == 0 {
 		return 0
 	}
+	// capping this to avoid d becoming a negative duration
 	if retry > 10 {
 		retry = 10
 	}
