@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ocallaco/redis/v8/internal/util"
+	"github.com/go-redis/redis/v8/internal/util"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/ocallaco/redis/v8/internal"
+	"github.com/go-redis/redis/v8/internal"
 )
 
 // KeepTTL is an option for Set command to keep key's existing TTL.
