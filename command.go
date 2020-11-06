@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ocallaco/redis/v8/internal"
-	"github.com/ocallaco/redis/v8/internal/proto"
-	"github.com/ocallaco/redis/v8/internal/util"
+	"github.com/go-redis/redis/v8/internal"
+	"github.com/go-redis/redis/v8/internal/proto"
+	"github.com/go-redis/redis/v8/internal/util"
 )
 
 type Cmder interface {

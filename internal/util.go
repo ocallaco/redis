@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/ocallaco/redis/v8/internal/proto"
-	"github.com/ocallaco/redis/v8/internal/util"
+	"github.com/go-redis/redis/v8/internal/proto"
+	"github.com/go-redis/redis/v8/internal/util"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/trace"
 )
@@ -67,7 +67,7 @@ func WithSpan(ctx context.Context, name string, fn func(context.Context, trace.S
 		return fn(ctx, span)
 	}
 
-	ctx, span := global.Tracer("github.com/ocallaco/redis").Start(ctx, name)
+	ctx, span := global.Tracer("github.com/go-redis/redis").Start(ctx, name)
 	defer span.End()
 
 	return fn(ctx, span)
