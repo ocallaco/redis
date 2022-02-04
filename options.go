@@ -16,6 +16,8 @@ import (
 	"github.com/go-redis/redis/v8/internal/pool"
 )
 
+type ShouldRetryFunc = func(error, bool) bool
+
 // Limiter is the interface of a rate limiter or a circuit breaker.
 type Limiter interface {
 	// Allow returns nil if operation is allowed or an error otherwise.
@@ -112,6 +114,8 @@ type Options struct {
 
 	// Limiter interface used to implemented circuit breaker or rate limiter.
 	Limiter Limiter
+
+	ShouldRetry ShouldRetryFunc
 }
 
 func (opt *Options) init() {
@@ -181,6 +185,9 @@ func (opt *Options) init() {
 		opt.MaxRetryBackoff = 0
 	case 0:
 		opt.MaxRetryBackoff = 512 * time.Millisecond
+	}
+	if opt.ShouldRetry == nil {
+		opt.ShouldRetry = shouldRetry
 	}
 }
 
