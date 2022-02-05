@@ -12,6 +12,7 @@ import (
 
 // ErrClosed performs any operation on the closed client will return this error.
 var ErrClosed = pool.ErrClosed
+var ErrPoolTimeout = pool.ErrPoolTimeout
 
 type Error interface {
 	error
