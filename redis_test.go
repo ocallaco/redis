@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis/v8"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type redisHookError struct {
@@ -243,12 +243,16 @@ var _ = Describe("Client", func() {
 		cn, err := client.Pool().Get(context.Background())
 		Expect(err).NotTo(HaveOccurred())
 		Expect(cn.UsedAt).NotTo(BeZero())
+
+		// set cn.SetUsedAt(time) or time.Sleep(>1*time.Second)
+		// simulate the last time Conn was used
+		// time.Sleep() is not the standard sleep time
+		// link: https://go-review.googlesource.com/c/go/+/232298
+		cn.SetUsedAt(time.Now().Add(-1 * time.Second))
 		createdAt := cn.UsedAt()
 
 		client.Pool().Put(ctx, cn)
 		Expect(cn.UsedAt().Equal(createdAt)).To(BeTrue())
-
-		time.Sleep(time.Second)
 
 		err = client.Ping(ctx).Err()
 		Expect(err).NotTo(HaveOccurred())
@@ -282,6 +286,35 @@ var _ = Describe("Client", func() {
 		got, err := client.Get(ctx, "key").Bytes()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(got).To(Equal(bigVal))
+	})
+
+	It("should set and scan time", func() {
+		tm := time.Now()
+		err := client.Set(ctx, "now", tm, 0).Err()
+		Expect(err).NotTo(HaveOccurred())
+
+		var tm2 time.Time
+		err = client.Get(ctx, "now").Scan(&tm2)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(tm2).To(BeTemporally("==", tm))
+	})
+
+	It("should set and scan durations", func() {
+		duration := 10 * time.Minute
+		err := client.Set(ctx, "duration", duration, 0).Err()
+		Expect(err).NotTo(HaveOccurred())
+
+		var duration2 time.Duration
+		err = client.Get(ctx, "duration").Scan(&duration2)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(duration2).To(Equal(duration))
+	})
+
+	It("should Conn", func() {
+		err := client.Conn(ctx).Get(ctx, "this-key-does-not-exist").Err()
+		Expect(err).To(Equal(redis.Nil))
 	})
 })
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-redis/redis/v8"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/go-redis/redis/v8"
 )
 
 var _ = Describe("pool", func() {
@@ -105,6 +105,13 @@ var _ = Describe("pool", func() {
 	})
 
 	It("reuses connections", func() {
+		// explain: https://github.com/go-redis/redis/pull/1675
+		opt := redisOptions()
+		opt.MinIdleConns = 0
+		opt.MaxConnAge = 0
+		opt.IdleTimeout = 2 * time.Second
+		client = redis.NewClient(opt)
+
 		for i := 0; i < 100; i++ {
 			val, err := client.Ping(ctx).Result()
 			Expect(err).NotTo(HaveOccurred())

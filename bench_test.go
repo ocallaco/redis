@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -27,18 +29,42 @@ func benchmarkRedisClient(ctx context.Context, poolSize int) *redis.Client {
 
 func BenchmarkRedisPing(b *testing.B) {
 	ctx := context.Background()
-	client := benchmarkRedisClient(ctx, 10)
-	defer client.Close()
+	rdb := benchmarkRedisClient(ctx, 10)
+	defer rdb.Close()
 
 	b.ResetTimer()
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			if err := client.Ping(ctx).Err(); err != nil {
+			if err := rdb.Ping(ctx).Err(); err != nil {
 				b.Fatal(err)
 			}
 		}
 	})
+}
+
+func BenchmarkSetGoroutines(b *testing.B) {
+	ctx := context.Background()
+	rdb := benchmarkRedisClient(ctx, 10)
+	defer rdb.Close()
+
+	for i := 0; i < b.N; i++ {
+		var wg sync.WaitGroup
+
+		for i := 0; i < 1000; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+
+				err := rdb.Set(ctx, "hello", "world", 0).Err()
+				if err != nil {
+					panic(err)
+				}
+			}()
+		}
+
+		wg.Wait()
+	}
 }
 
 func BenchmarkRedisGetNil(b *testing.B) {
@@ -200,6 +226,45 @@ func BenchmarkZAdd(b *testing.B) {
 			err := client.ZAdd(ctx, "key", &redis.Z{
 				Score:  float64(1),
 				Member: "hello",
+			}).Err()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
+func BenchmarkXRead(b *testing.B) {
+	ctx := context.Background()
+	client := benchmarkRedisClient(ctx, 10)
+	defer client.Close()
+
+	args := redis.XAddArgs{
+		Stream: "1",
+		ID:     "*",
+		Values: map[string]string{"uno": "dos"},
+	}
+
+	lenStreams := 16
+	streams := make([]string, 0, lenStreams)
+	for i := 0; i < lenStreams; i++ {
+		streams = append(streams, strconv.Itoa(i))
+	}
+	for i := 0; i < lenStreams; i++ {
+		streams = append(streams, "0")
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			client.XAdd(ctx, &args)
+
+			err := client.XRead(ctx, &redis.XReadArgs{
+				Streams: streams,
+				Count:   1,
+				Block:   time.Second,
 			}).Err()
 			if err != nil {
 				b.Fatal(err)

@@ -2,14 +2,15 @@ package pool_test
 
 import (
 	"context"
+	"net"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis/v8/internal/pool"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/go-redis/redis/v8/internal/pool"
 )
 
 var _ = Describe("ConnPool", func() {
@@ -28,6 +29,43 @@ var _ = Describe("ConnPool", func() {
 
 	AfterEach(func() {
 		connPool.Close()
+	})
+
+	It("should safe close", func() {
+		const minIdleConns = 10
+
+		var (
+			wg         sync.WaitGroup
+			closedChan = make(chan struct{})
+		)
+		wg.Add(minIdleConns)
+		connPool = pool.NewConnPool(&pool.Options{
+			Dialer: func(ctx context.Context) (net.Conn, error) {
+				wg.Done()
+				<-closedChan
+				return &net.TCPConn{}, nil
+			},
+			PoolSize:           10,
+			PoolTimeout:        time.Hour,
+			IdleTimeout:        time.Millisecond,
+			IdleCheckFrequency: time.Millisecond,
+			MinIdleConns:       minIdleConns,
+		})
+		wg.Wait()
+		Expect(connPool.Close()).NotTo(HaveOccurred())
+		close(closedChan)
+
+		// We wait for 1 second and believe that checkMinIdleConns has been executed.
+		time.Sleep(time.Second)
+
+		Expect(connPool.Stats()).To(Equal(&pool.Stats{
+			Hits:       0,
+			Misses:     0,
+			Timeouts:   0,
+			TotalConns: 0,
+			IdleConns:  0,
+			StaleConns: 0,
+		}))
 	})
 
 	It("should unblock client when conn is removed", func() {
