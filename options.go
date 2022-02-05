@@ -66,6 +66,7 @@ type Options struct {
 	// Maximum backoff between each retry.
 	// Default is 512 milliseconds; -1 disables backoff.
 	MaxRetryBackoff time.Duration
+	ShouldRetry     ShouldRetryFunc
 
 	// Dial timeout for establishing new connections.
 	// Default is 5 seconds.
@@ -114,8 +115,6 @@ type Options struct {
 
 	// Limiter interface used to implemented circuit breaker or rate limiter.
 	Limiter Limiter
-
-	ShouldRetry ShouldRetryFunc
 }
 
 func (opt *Options) init() {

@@ -63,6 +63,7 @@ type ClusterOptions struct {
 	MaxRetries      int
 	MinRetryBackoff time.Duration
 	MaxRetryBackoff time.Duration
+	ShouldRetry     ShouldRetryFunc
 
 	DialTimeout  time.Duration
 	ReadTimeout  time.Duration
