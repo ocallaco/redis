@@ -37,4 +37,9 @@ var _ = Describe("UniversalClient", func() {
 		})
 		Expect(client.Ping(ctx).Err()).NotTo(HaveOccurred())
 	})
+
+	It("should set the default ShouldRetry on simple clients", func() {
+		client = redis.NewSimpleClient(&redis.UniversalOptions{})
+		Expect(client.baseClient.opt.ShouldRetry).Should(Equal(DefaultShouldRetry))
+	})
 })
