@@ -112,22 +112,9 @@ type Options struct {
 	// DB is the database to be selected after connecting to the server.
 	DB int
 
-	// MaxRetries is the maximum number of retries before giving up.
-	// -1 (not 0) disables retries.
-	//
-	// default: 3 retries
-	MaxRetries int
-
-	// MinRetryBackoff is the minimum backoff between each retry.
-	// -1 disables backoff.
-	//
-	// default: 8 milliseconds
-	MinRetryBackoff time.Duration
-
-	// MaxRetryBackoff is the maximum backoff between each retry.
-	// -1 disables backoff.
-	// default: 512 milliseconds;
-	MaxRetryBackoff time.Duration
+	// Failsafe provides retry policy configuration.
+	// If nil, no automatic retries are performed (except for connection establishment).
+	Failsafe interface{}
 
 	// DialTimeout for establishing new connections.
 	//
@@ -389,24 +376,25 @@ func (opt *Options) init() {
 
 	opt.ConnMaxLifetimeJitter = min(opt.ConnMaxLifetimeJitter, opt.ConnMaxLifetime)
 
-	switch opt.MaxRetries {
-	case -1:
-		opt.MaxRetries = 0
-	case 0:
-		opt.MaxRetries = 3
-	}
-	switch opt.MinRetryBackoff {
-	case -1:
-		opt.MinRetryBackoff = 0
-	case 0:
-		opt.MinRetryBackoff = 8 * time.Millisecond
-	}
-	switch opt.MaxRetryBackoff {
-	case -1:
-		opt.MaxRetryBackoff = 0
-	case 0:
-		opt.MaxRetryBackoff = 512 * time.Millisecond
-	}
+	// Retry configuration moved to Failsafe
+	// switch opt.MaxRetries {
+	// case -1:
+	// 	opt.MaxRetries = 0
+	// case 0:
+	// 	opt.MaxRetries = 3
+	// }
+	// switch opt.MinRetryBackoff {
+	// case -1:
+	// 	opt.MinRetryBackoff = 0
+	// case 0:
+	// 	opt.MinRetryBackoff = 8 * time.Millisecond
+	// }
+	// switch opt.MaxRetryBackoff {
+	// case -1:
+	// 	opt.MaxRetryBackoff = 0
+	// case 0:
+	// 	opt.MaxRetryBackoff = 512 * time.Millisecond
+	// }
 
 	if opt.FailingTimeoutSeconds == 0 {
 		opt.FailingTimeoutSeconds = 15
@@ -672,9 +660,9 @@ func setupConnParams(u *url.URL, o *Options) (*Options, error) {
 
 	o.Protocol = q.int("protocol")
 	o.ClientName = q.string("client_name")
-	o.MaxRetries = q.int("max_retries")
-	o.MinRetryBackoff = q.duration("min_retry_backoff")
-	o.MaxRetryBackoff = q.duration("max_retry_backoff")
+	// o.MaxRetries = q.int("max_retries")
+	// o.MinRetryBackoff = q.duration("min_retry_backoff")
+	// o.MaxRetryBackoff = q.duration("max_retry_backoff")
 	o.DialTimeout = q.duration("dial_timeout")
 	o.ReadTimeout = q.duration("read_timeout")
 	o.WriteTimeout = q.duration("write_timeout")

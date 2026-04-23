@@ -94,9 +94,9 @@ type RingOptions struct {
 	StreamingCredentialsProvider auth.StreamingCredentialsProvider
 	DB                           int
 
-	MaxRetries      int
-	MinRetryBackoff time.Duration
-	MaxRetryBackoff time.Duration
+	// Failsafe provides retry policy configuration.
+	// If nil, no automatic retries are performed (except for connection establishment).
+	Failsafe interface{}
 
 	DialTimeout time.Duration
 
@@ -222,7 +222,7 @@ func (opt *RingOptions) clientOptions() *Options {
 		StreamingCredentialsProvider: opt.StreamingCredentialsProvider,
 		DB:                           opt.DB,
 
-		MaxRetries: -1,
+        // MaxRetries: -1,  // Moved to Failsafe
 
 		DialTimeout:           opt.DialTimeout,
 		DialerRetries:         opt.DialerRetries,
